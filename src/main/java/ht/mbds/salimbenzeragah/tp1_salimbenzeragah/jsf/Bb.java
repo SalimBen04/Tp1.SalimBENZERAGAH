@@ -1,6 +1,7 @@
 package ht.mbds.salimbenzeragah.tp1_salimbenzeragah.jsf;
 
-import ht.mbds.salimbenzeragah.tp1_salimbenzeragah.service.GenerateurReponse;import jakarta.faces.application.FacesMessage;
+import ht.mbds.salimbenzeragah.tp1_salimbenzeragah.service.GenerateurReponse;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
@@ -49,6 +50,21 @@ public class Bb implements Serializable {
      * La conversation depuis le début.
      */
     private StringBuilder conversation = new StringBuilder();
+
+    /**
+     * Pour afficher ou non le JSON échangé avec le LLM (mode debug).
+     */
+    private boolean debug;
+
+    /**
+     * Texte JSON de la requête envoyée à l'API du LLM (affiché en mode debug).
+     */
+    private String texteRequeteJson;
+
+    /**
+     * Texte JSON de la réponse reçue de l'API du LLM (affiché en mode debug).
+     */
+    private String texteReponseJson;
 
     /**
      * Service pour modifier la question et générer la réponse.
@@ -107,6 +123,30 @@ public class Bb implements Serializable {
 
     public void setConversation(String conversation) {
         this.conversation = new StringBuilder(conversation);
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getTexteRequeteJson() {
+        return texteRequeteJson;
+    }
+
+    public void setTexteRequeteJson(String texteRequeteJson) {
+        this.texteRequeteJson = texteRequeteJson;
+    }
+
+    public String getTexteReponseJson() {
+        return texteReponseJson;
+    }
+
+    public void setTexteReponseJson(String texteReponseJson) {
+        this.texteReponseJson = texteReponseJson;
     }
 
     /**
