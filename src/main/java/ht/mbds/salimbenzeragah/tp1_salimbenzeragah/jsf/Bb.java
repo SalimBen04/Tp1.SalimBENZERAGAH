@@ -1,6 +1,7 @@
 package ht.mbds.salimbenzeragah.tp1_salimbenzeragah.jsf;
 
-import ht.mbds.salimbenzeragah.tp1_salimbenzeragah.service.GenerateurReponse;
+import ht.mbds.salimbenzeragah.tp1_salimbenzeragah.llm.JsonAdapterPourGemini;
+import ht.mbds.salimbenzeragah.tp1_salimbenzeragah.llm.LlmInteraction;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -10,6 +11,7 @@ import jakarta.inject.Named;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,7 +24,7 @@ import java.util.List;
 public class Bb implements Serializable {
 
     /**
-     * Rôle "système" que l'on attribuera plus tard à un LLM.
+     * Rôle "système" que l'on attribue au LLM.
      * Possible d'écrire un nouveau rôle dans la liste déroulante.
      */
     private String roleSysteme;
@@ -43,7 +45,7 @@ public class Bb implements Serializable {
      */
     private String question;
     /**
-     * Dernière réponse de l'API OpenAI.
+     * Dernière réponse de l'API du LLM.
      */
     private String reponse;
     /**
@@ -67,10 +69,10 @@ public class Bb implements Serializable {
     private String texteReponseJson;
 
     /**
-     * Service pour modifier la question et générer la réponse.
+     * Service qui prépare le JSON des requêtes et envoie les questions à l'API de Gemini.
      */
     @Inject
-    private GenerateurReponse generateurReponse;
+    private JsonAdapterPourGemini jsonAdapter;
 
     /**
      * Contexte JSF. Utilisé pour qu'un message d'erreur s'affiche dans le formulaire.
@@ -150,10 +152,8 @@ public class Bb implements Serializable {
     }
 
     /**
-     * Envoie la question au serveur.
-     * En attendant de l'envoyer à un LLM, le serveur fait un traitement quelconque, juste pour tester :
-     * Le traitement consiste à copier la question en minuscules et à l'entourer avec "||". Le rôle système
-     * est ajouté au début de la première réponse.
+     * Envoie la question à l'API du LLM et récupère sa réponse.
+     * Au début de la conversation, le rôle système choisi par l'utilisateur est transmis à jsonAdapter.
      *
      * @return null pour rester sur la même page.
      */
@@ -166,12 +166,28 @@ public class Bb implements Serializable {
             return null;
         }
 
-        // Traite la question pour construire la réponse.
-        if (this.conversation.isEmpty()) { // Si la conversation n'a pas encore commencé
+        // Si la conversation n'a pas encore commencé
+        if (this.conversation.isEmpty()) {
             // Fige la liste déroulante qui permet de choisir le rôle système
             this.roleSystemeChangeable = false;
+            // Envoie le rôle système à jsonAdapter, qui le mettra dans le JSON de la première requête.
+            this.jsonAdapter.setSystemRole(this.roleSysteme);
         }
-        this.reponse = this.generateurReponse.genererReponse(this.question, this.roleSysteme);
+
+        try {
+            LlmInteraction interaction = jsonAdapter.envoyerRequete(question);
+            this.reponse = interaction.reponseExtraite();
+            this.texteRequeteJson = interaction.questionJson();
+            this.texteReponseJson = interaction.reponseJson();
+        } catch (Exception e) {
+            this.reponse = "Erreur : " + e.getMessage();
+            FacesMessage message =
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Problème de connexion avec l'API du LLM",
+                            "Problème de connexion avec l'API du LLM" + e.getMessage() + "\n"
+                                    + Arrays.toString(e.getStackTrace()));
+            facesContext.addMessage(null, message);
+        }
 
         // La conversation contient l'historique des questions-réponses depuis le début.
         afficherConversation();
@@ -185,6 +201,7 @@ public class Bb implements Serializable {
      * sans changer de vue.
      * Le fait de changer de vue va faire supprimer l'instance en cours du backing bean par CDI et donc on reprend
      * tout comme au début puisqu'une nouvelle instance du backing va être utilisée par la page index.xhtml.
+     *
      * @return "index"
      */
     public String nouveauChat() {
