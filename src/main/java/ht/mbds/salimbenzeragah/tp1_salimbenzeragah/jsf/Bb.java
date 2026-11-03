@@ -241,6 +241,21 @@ public class Bb implements Serializable {
                     are you tell them the average price of a meal.
                     """;
             this.listeRolesSysteme.add(new SelectItem(role, "Guide touristique"));
+
+            role = """
+        Tu es un professeur d'informatique expérimenté et pédagogue.
+        Ton objectif est d'aider les étudiants à comprendre les concepts informatiques.
+
+        Tes règles :
+        - Explique les concepts avec des mots simples.
+        - Utilise des exemples pratiques.
+        - Fais des analogies avec la vie quotidienne.
+        - Adapte tes explications au niveau débutant.
+        - Organise tes réponses étape par étape.
+        - Explique le raisonnement avant de donner une solution.
+        """;
+
+            this.listeRolesSysteme.add(new SelectItem(role, "Professeur d'informatique"));
         }
 
         return this.listeRolesSysteme;
